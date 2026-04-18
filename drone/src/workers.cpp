@@ -10,6 +10,10 @@ void motor_worker() {
     int esc_pin = 18;
     if (lgGpioClaimOutput(h, 0, esc_pin, 0) < 0) return;
 
+    // variables for IMU data
+    float accel_x, accel_y, accel_z, gyro_roll, gyro_pitch, gyro_yaw;
+
+
     std::cout << "[Motor] Sending Neutral (7.5%). PLUG IN BATTERY NOW..." << std::endl;
     for(int i = 0; i < 40; i++) { // 4 seconds total
         lgTxPwm(h, esc_pin, 50, 7.5, 0, 0); 
@@ -81,19 +85,23 @@ void camera_worker() {
 
 
 void listen_worker() {
-    std::cout << "[Listen] Press 'k' + Enter to toggle HIGH/LOW" << std::endl;
-    char input;
+    RadioManager radio = RadioManager();
+    ControlPacket pkt = ControlPacket();
+    TelemetryPacket telem = TelemetryPacket();
+    if (!radio.init()) {
+        std::cout << "[Listen Worker] Failed to initialize radio. Exiting listen worker thread." << std::endl;
+        return;
+    }
+    else {
+        std::cout << "[Listen Worker] Radio initialized successfully." << std::endl;
+    }
+
     while(running) {
-        std::cout << "Listen Worker Running. Awaiting input..." << std::endl;
-        if (input == 'k') {
-            if (motor_state == 1) {
-                motor_state = 2;
-                std::cout << ">> Setting PWM to LOW (5%)" << std::endl;
-            } else {
-                motor_state = 1;
-                std::cout << ">> Setting PWM to HIGH (10%)" << std::endl;
-            }
-        }
+        std::cout << "Listen Worker Running." << std::endl;
+        radio.receive(pkt);
+        radio.queueTelemetry(telem);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+
+    return;
 }

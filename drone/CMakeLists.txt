@@ -3,6 +3,7 @@ set(BINARY_NAME pringle_drone)
 
 # 1. Include the 'inc' directory so the compiler finds main.hpp and workers.hpp
 include_directories(inc)
+include_directories(${CMAKE_SOURCE_DIR})
 
 # 2. Gather all the source files from 'src'
 file(GLOB SOURCES "src/*.cpp")
@@ -19,6 +20,7 @@ target_link_libraries(${BINARY_NAME}
     pthread
     m
     i2c
+    rf24
 )
 
 # Optional: Set the output directory to the root for convenience
