@@ -17,6 +17,8 @@ target_link_libraries(${BINARY_NAME}
     ${OpenCV_LIBS}
     lgpio
     pthread
+    m
+    i2c
 )
 
 # Optional: Set the output directory to the root for convenience

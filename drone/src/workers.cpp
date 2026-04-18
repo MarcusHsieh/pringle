@@ -3,12 +3,19 @@
 // 0 = Neutral/Armed, 1 = High (Forward), 2 = Low (Reverse/Brake)
 std::atomic<int> motor_state(1);
 
+
+MPU6050 imu = MPU6050(0x68, true); // I2C address, bool run update thread
+
 void motor_worker() {
+    float accel_x, accel_y, accel_z, gyro_roll, gyro_pitch, gyro_yaw;
+
+
     int esc_pin = 18; // Physical Pin 12
     if (lgGpioClaimOutput(h, 0, esc_pin, 0) < 0) return;
+    // // pins for i2c usage
+    // if (lgGpioClaimInput(h, 0, 2, 0) < 0) return;
+    // if (lgGpioClaimInput(h, 0, 3, 0) < 0) return;
 
-    // --- STEP 1: THE HANDSHAKE (ARMING) ---
-    // We MUST hold 7.5% steady so the ESC hears the "Neutral" it wants.
     std::cout << "[Motor] Sending Neutral (7.5%). PLUG IN BATTERY NOW..." << std::endl;
     
     for(int i = 0; i < 40; i++) { // 4 seconds total
@@ -18,36 +25,37 @@ void motor_worker() {
         if(i == 20) std::cout << "[Motor] Still waiting for ESC to arm..." << std::endl;
     }
 
-    // You should hear the "second beep" during the 4 seconds above.
     std::cout << "[Motor] ESC should be armed. Starting ramp-up!" << std::endl;
 
-    // --- STEP 2: THE RAMP ---
     double current_throttle = 7.5;
     while(running) {
+        std::cout << "Reading IMU Data..." << std::endl;
+        imu.getAccel(&accel_x, &accel_y, &accel_z);
+        imu.getGyro(&gyro_roll, &gyro_pitch, &gyro_yaw);
+        std::cout << "Accel (g): X=" << accel_x << " Y=" << accel_y << " Z=" << accel_z << std::endl;
+        std::cout << "Gyro (°/s): Roll=" << gyro_roll << " Pitch=" << gyro_pitch << " Yaw=" << gyro_yaw << std::endl;
+        
+        std::cout << "Motor Worker Running. Current Throttle: " << current_throttle << "%" << std::endl;
         if (current_throttle < 10.0) {
             current_throttle += 0.05;
         }
         else {
             current_throttle = 7.5; // Loop back to Neutral
         }
-
-        std::cout << "Throttle: " << current_throttle << "%" << std::endl;
         lgTxPwm(h, esc_pin, 50, current_throttle, 0, 0); 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
-    lgTxPwm(h, esc_pin, 50, 7.5, 0, 0); // Safety Neutral
+    lgTxPwm(h, esc_pin, 50, 7.5, 0, 0);
 }
 
 void camera_worker() {
-    // 1. Open the Frame Buffer
     int fb_fd = open("/dev/fb0", O_RDWR);
     if (fb_fd == -1) {
         std::cerr << "[Camera] Error: Cannot open /dev/fb0 even though it exists!" << std::endl;
         return;
     }
 
-    // 2. Open USB Camera
     cv::VideoCapture cap(0);
     if (!cap.isOpened()) {
         std::cerr << "[Camera] Error: USB Camera not detected." << std::endl;
@@ -55,7 +63,6 @@ void camera_worker() {
         return;
     }
 
-    // Match the 640x480 resolution we set in config.txt
     cap.set(cv::CAP_PROP_FRAME_WIDTH, 640);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
 
@@ -67,7 +74,6 @@ void camera_worker() {
         cap >> frame;
         if (frame.empty()) continue;
 
-        // Convert 3-channel BGR to 4-channel BGRA (Standard for Pi Framebuffer)
         cv::cvtColor(frame, bgra_frame, cv::COLOR_BGR2BGRA);
 
         // Write directly to the hardware memory
@@ -87,7 +93,7 @@ void listen_worker() {
     std::cout << "[Listen] Press 'k' + Enter to toggle HIGH/LOW" << std::endl;
     char input;
     while(running) {
-        std::cin >> input;
+        std::cout << "Listen Worker Running. Awaiting input..." << std::endl;
         if (input == 'k') {
             if (motor_state == 1) {
                 motor_state = 2;
@@ -97,5 +103,6 @@ void listen_worker() {
                 std::cout << ">> Setting PWM to HIGH (10%)" << std::endl;
             }
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
