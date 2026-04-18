@@ -1,30 +1,23 @@
-cmake_minimum_required(VERSION 3.16)
-project(r6_drone LANGUAGES CXX)
+# Define the executable name
+set(BINARY_NAME pringle_drone)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# 1. Include the 'inc' directory so the compiler finds main.hpp and workers.hpp
+include_directories(inc)
 
-find_package(RF24 REQUIRED)
-find_package(OpenCV REQUIRED)
+# 2. Gather all the source files from 'src'
+file(GLOB SOURCES "src/*.cpp")
 
-add_executable(r6_drone
-    src/main.cpp
-    # src/DroneApp.cpp
-    # src/RadioManager.cpp
-    # src/MotorController.cpp
-    # src/ServoController.cpp
-    # src/CameraCapture.cpp
-)
+# 3. Create the executable
+add_executable(${BINARY_NAME} ${SOURCES})
 
-target_include_directories(r6_drone PRIVATE
-    include
-    ${CMAKE_SOURCE_DIR}/..
-    ${OpenCV_INCLUDE_DIRS}
-)
-
-target_link_libraries(r6_drone PRIVATE
-    RF24
-    lgpio
+# 4. Link Libraries
+# Assuming you are using lgpio for the motors and OpenCV for the drone's CV tasks
+target_link_libraries(${BINARY_NAME} 
+    PRIVATE 
     ${OpenCV_LIBS}
+    lgpio
     pthread
 )
+
+# Optional: Set the output directory to the root for convenience
+set_target_properties(${BINARY_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
