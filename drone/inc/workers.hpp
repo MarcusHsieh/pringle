@@ -10,6 +10,9 @@
 #include <sys/ioctl.h>
 #include <linux/fb.h>
 
+// variables for IMU data
+float accel_x, accel_y, accel_z, gyro_roll, gyro_pitch, gyro_yaw;
+
 // declarations for worker threads
 void motor_worker();
 void camera_worker();

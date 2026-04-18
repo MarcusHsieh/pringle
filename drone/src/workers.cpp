@@ -7,17 +7,10 @@ std::atomic<int> motor_state(1);
 MPU6050 imu = MPU6050(0x68, true); // I2C address, bool run update thread
 
 void motor_worker() {
-    float accel_x, accel_y, accel_z, gyro_roll, gyro_pitch, gyro_yaw;
-
-
-    int esc_pin = 18; // Physical Pin 12
+    int esc_pin = 18;
     if (lgGpioClaimOutput(h, 0, esc_pin, 0) < 0) return;
-    // // pins for i2c usage
-    // if (lgGpioClaimInput(h, 0, 2, 0) < 0) return;
-    // if (lgGpioClaimInput(h, 0, 3, 0) < 0) return;
 
     std::cout << "[Motor] Sending Neutral (7.5%). PLUG IN BATTERY NOW..." << std::endl;
-    
     for(int i = 0; i < 40; i++) { // 4 seconds total
         lgTxPwm(h, esc_pin, 50, 7.5, 0, 0); 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -26,7 +19,6 @@ void motor_worker() {
     }
 
     std::cout << "[Motor] ESC should be armed. Starting ramp-up!" << std::endl;
-
     double current_throttle = 7.5;
     while(running) {
         std::cout << "Reading IMU Data..." << std::endl;
@@ -45,7 +37,6 @@ void motor_worker() {
         lgTxPwm(h, esc_pin, 50, current_throttle, 0, 0); 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-
     lgTxPwm(h, esc_pin, 50, 7.5, 0, 0);
 }
 
