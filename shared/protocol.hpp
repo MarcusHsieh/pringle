@@ -2,22 +2,28 @@
 #include <cstdint>
 
 // RF24 settings
+// Controller -> PTX (Primary Transmitter)
+// Drone -> PRX (Primary Receiver)
+// Basically, whenever controller sends packet, drone acks it back w/ its own packet
 constexpr uint8_t RF_CHANNEL        = 76;
 constexpr uint8_t CTRL_ADDR[6]      = "1CTRL";   // controller to drone
-constexpr uint8_t TELEM_ADDR[6]     = "1TELM";   // drone to controller
 
-// Control packet: controller transmits, drone receives
-// All pulse widths in microseconds (1000=full reverse, 1500=stop, 2000=full forward)
+// Control packet (6 bytes)
+// Pulse widths in microseconds
 struct ControlPacket {
-    int16_t leftPW;    // left motor
-    int16_t rightPW;   // right motor
-    int16_t servoPW;   // camera gimbal pitch
+    int16_t leftPW;    // left motor (1000=full reverse, 1500=stop, 2000=full forward)
+    int16_t rightPW;   // right motor (same as above)
+    int16_t servoPW;   // camera gimbal pitch (1500=center)
 };
-// 6 bytes total
 
-// Telemetry packet: drone transmits back (stub for now)
+// Telemetry packet (3 bytes)
 struct TelemetryPacket {
-    uint8_t seq;   // rolling counter for packet loss detection
-    uint8_t  cpuTemp;       // drone CPU temperature in Celsius
+    uint8_t seq;            // rolling counter (0-255) for packet loss detection, ensures link is alive
+    uint8_t cpuTemp;        // drone CPU temperature in Celsius
+    uint8_t flags;          // bitmask
 };
-// 2 bytes total
+
+namespace Flags {
+    constexpr uint8_t MOTORS_ARMED = 1u << 0;
+    constexpr uint8_t CAMERA_OK    = 1u << 1;
+}
