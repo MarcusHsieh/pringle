@@ -8,12 +8,15 @@
 constexpr uint8_t RF_CHANNEL        = 76;
 constexpr uint8_t CTRL_ADDR[6]      = "1CTRL";   // controller to drone
 
-// Control packet (6 bytes)
-// Pulse widths in microseconds
+// Control packet (12 bytes)
+// Pulse widths in duty cycle percent @ 50hz -> motor + servo
+//    5.0 = full reverse (1.0ms pulse)
+//    7.5 = stop/neutral (1.5ms pulse)
+//   10.0 = full forward (2.0ms pulse)
 struct ControlPacket {
-    int16_t leftPW;    // left motor (1000=full reverse, 1500=stop, 2000=full forward)
-    int16_t rightPW;   // right motor (same as above)
-    int16_t servoPW;   // camera gimbal pitch (1500=center)
+    float leftDuty;    // left motor 
+    float rightDuty;   // right motor
+    float servoDuty;   // camera gimbal pitch
 };
 
 // Telemetry packet (3 bytes)
