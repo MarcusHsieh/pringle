@@ -22,5 +22,6 @@ int main() {
     listen_thread.join();
 
     lgGpiochipClose(h);
+    running = false;
     return 0;
 }

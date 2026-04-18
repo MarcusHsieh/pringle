@@ -1,47 +1,74 @@
 #include "workers.hpp"
 
-// 0 = Neutral/Armed, 1 = High (Forward), 2 = Low (Reverse/Brake)
-std::atomic<int> motor_state(1);
-
-
+std::mutex command_mutex; // ensures thread safe access to command variables
 MPU6050 imu = MPU6050(0x68, true); // I2C address, bool run update thread
 
+// variables for motor commands
+float left_command = 7.5f;
+float right_command = 7.5f;
+float servo_command = 7.5f;
+
+// variables for IMU data
+float accel_x = 0.0f;
+float accel_y = 0.0f; 
+float accel_z = 0.0f; 
+float gyro_roll = 0.0f; 
+float gyro_pitch = 0.0f; 
+float gyro_yaw = 0.0f;
+
 void motor_worker() {
-    int esc_pin = 18;
-    if (lgGpioClaimOutput(h, 0, esc_pin, 0) < 0) return;
+    PIDController pid;
+    pid.Kp = 0.4f;
+    pid.Ki = 0.01f;
+    pid.Kd = 0.1f;
+    float dt = 0.1f; // 100ms loop
+    float correction = 0.0f;
 
-    // variables for IMU data
-    float accel_x, accel_y, accel_z, gyro_roll, gyro_pitch, gyro_yaw;
-
+    if (lgGpioClaimOutput(h, 0, MOTOR_PIN_RIGHT, 0) < 0 || lgGpioClaimOutput(h, 0, MOTOR_PIN_LEFT, 0) < 0 || lgGpioClaimOutput(h, 0, SERVO_PIN, 0) < 0) {
+        std::cout << "Motor Initialization Failure. Check GPIO Pins." << std::endl;
+        return;
+    }
 
     std::cout << "[Motor] Sending Neutral (7.5%). PLUG IN BATTERY NOW..." << std::endl;
     for(int i = 0; i < 40; i++) { // 4 seconds total
-        lgTxPwm(h, esc_pin, 50, 7.5, 0, 0); 
+        lgTxPwm(h, MOTOR_PIN_RIGHT, 50, 7.5, 0, 0);
+        lgTxPwm(h, MOTOR_PIN_LEFT, 50, 7.5, 0, 0);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         
         if(i == 20) std::cout << "[Motor] Still waiting for ESC to arm..." << std::endl;
     }
 
-    std::cout << "[Motor] ESC should be armed. Starting ramp-up!" << std::endl;
-    double current_throttle = 7.5;
     while(running) {
-        std::cout << "Reading IMU Data..." << std::endl;
         imu.getAccel(&accel_x, &accel_y, &accel_z);
         imu.getGyro(&gyro_roll, &gyro_pitch, &gyro_yaw);
-        std::cout << "Accel (g): X=" << accel_x << " Y=" << accel_y << " Z=" << accel_z << std::endl;
-        std::cout << "Gyro (°/s): Roll=" << gyro_roll << " Pitch=" << gyro_pitch << " Yaw=" << gyro_yaw << std::endl;
-        
-        std::cout << "Motor Worker Running. Current Throttle: " << current_throttle << "%" << std::endl;
-        if (current_throttle < 10.0) {
-            current_throttle += 0.05;
+
+        if (std::abs(gyro_pitch) > 10.0f) {
+            correction = pid.calculate(0.0f, gyro_pitch, dt);
         }
         else {
-            current_throttle = 7.5; // Loop back to Neutral
+            pid.integral = 0.0f;
         }
-        lgTxPwm(h, esc_pin, 50, current_throttle, 0, 0); 
+        
+        // use command variables to control motor speeds
+        {
+            std::lock_guard<std::mutex> lock(command_mutex);
+            std::cout << "Current IMU Readings - Gyro (Roll, Pitch, Yaw): (" << gyro_roll << ", " << gyro_pitch << ", " << gyro_yaw << ") deg/s" << std::endl;
+
+            right_command = right_command + correction;
+            left_command = left_command - correction;
+
+            lgTxPwm(h, MOTOR_PIN_RIGHT, 50, right_command, 0, 0);
+            lgTxPwm(h, MOTOR_PIN_LEFT, 50, left_command, 0, 0);
+            lgTxPwm(h, SERVO_PIN, 50, servo_command, 0, 0);
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    lgTxPwm(h, esc_pin, 50, 7.5, 0, 0);
+
+    // set motors to neutral on exit
+    lgTxPwm(h, MOTOR_PIN_RIGHT, 50, 7.5, 0, 0);
+    lgTxPwm(h, MOTOR_PIN_LEFT, 50, 7.5, 0, 0);
+    lgTxPwm(h, SERVO_PIN, 50, 7.5, 0, 0);
+    return;
 }
 
 void camera_worker() {
@@ -83,11 +110,11 @@ void camera_worker() {
     close(fb_fd);
 }
 
-
 void listen_worker() {
     RadioManager radio = RadioManager();
     ControlPacket pkt = ControlPacket();
     TelemetryPacket telem = TelemetryPacket();
+
     if (!radio.init()) {
         std::cout << "[Listen Worker] Failed to initialize radio. Exiting listen worker thread." << std::endl;
         return;
@@ -100,6 +127,15 @@ void listen_worker() {
         std::cout << "Listen Worker Running." << std::endl;
         radio.receive(pkt);
         radio.queueTelemetry(telem);
+
+        // digest packet into variables for control
+        {
+            std::lock_guard<std::mutex> lock(command_mutex);
+            left_command = pkt.leftDuty;
+            right_command = pkt.rightDuty;
+            servo_command = pkt.servoDuty;
+            std::cout << "Received Control Packet - Left Duty: " << left_command << "%, Right Duty: " << right_command << "%, Servo Duty: " << servo_command << "%" << std::endl;
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
