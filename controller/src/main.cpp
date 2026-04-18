@@ -16,7 +16,7 @@ int main() {
     gController = &ctrl;
 
     if (!ctrl.init()) {
-        std::cerr << "Controller init failed";
+        std::cerr << "Controller init failed\n";
         return 1;
     }
 
