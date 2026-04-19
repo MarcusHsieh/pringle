@@ -21,7 +21,7 @@ fi
 
 cd RF24
 mkdir -p build && cd build
-cmake .. -D RF24_DRIVER=LGPIO
+cmake .. -D RF24_DRIVER=SPIDEV
 make -j"$(nproc)"
 sudo make install
 sudo ldconfig
