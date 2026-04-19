@@ -51,26 +51,27 @@ def main():
 
     print("[RX] radio.begin() OK — SPI established")
 
-    radio.set_channel(CHANNEL)
+    radio.setChannel(CHANNEL)
     print(f"[RX] Channel: {CHANNEL} ({2400 + CHANNEL} MHz)")
 
     radio.set_pa_level(PA_LEVEL)
+
     print(f"[RX] PA level: {PA_LEVEL}  (0=MIN 1=LOW 2=HIGH 3=MAX)")
 
-    radio.set_data_rate(DATA_RATE)
+    radio.setDataRate(DATA_RATE)
     print("[RX] Data rate: RF24_250KBPS")
 
     radio.set_auto_ack(True)          # ENABLED — receiver sends ACKs automatically
     print("[RX] Auto-ack: ENABLED")
 
     radio.dynamic_payloads = False
-    radio.payload_length = PAYLOAD_SIZE
+    radio.payload_size = PAYLOAD_SIZE
     print(f"[RX] Fixed payload size: {PAYLOAD_SIZE} bytes")
 
     radio.set_retries(RETRY_DELAY, RETRY_COUNT)
 
     # Open pipe 1 — NOT pipe 0. Pipe 0 is reserved internally for auto-ack TX address.
-    radio.open_reading_pipe(1, PIPE_ADDR)
+    radio.openReadingPipe(1, PIPE_ADDR)
     print(f"[RX] Reading pipe 1: {PIPE_ADDR}")
 
     radio.start_listening()           # PRX mode
