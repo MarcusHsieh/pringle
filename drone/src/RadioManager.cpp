@@ -10,7 +10,7 @@ bool RadioManager::init() {
     }
 
     radio_.setChannel(RF_CHANNEL);
-    radio_.setPALevel(RF24_PA_HIGH);
+    radio_.setPALevel(RF24_PA_LOW);
     radio_.setDataRate(RF24_250KBPS);
     radio_.setRetries(5, 15);
     radio_.enableAckPayload();                  // allows writeAckPayload()
@@ -18,6 +18,7 @@ bool RadioManager::init() {
     radio_.openReadingPipe(1, CTRL_ADDR);       // pipe 1 = where control packets arrive
     radio_.startListening();                    // PRX mode
 
+    radio_.printDetails();
     std::cout << "[Radio] Drone radio OK - listening on channel " << (int)RF_CHANNEL << "\n";
     return true;
 }

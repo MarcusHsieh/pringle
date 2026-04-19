@@ -10,7 +10,7 @@ bool RadioManager::init() {
     }
 
     radio_.setChannel(RF_CHANNEL);
-    radio_.setPALevel(RF24_PA_HIGH);      // max power; drop to RF24_PA_LOW for bench testing
+    radio_.setPALevel(RF24_PA_LOW);
     radio_.setDataRate(RF24_250KBPS);     // lowest data rate = best range and noise rejection
     radio_.setRetries(5, 15);             // retry up to 15x with 5x250µs = 1.25ms b/n tries
     radio_.enableAckPayload();            // telemetry rides on the ACK, no role swap
@@ -18,12 +18,14 @@ bool RadioManager::init() {
     radio_.openWritingPipe(CTRL_ADDR);
     radio_.stopListening();               // PTX mode
 
+    radio_.printDetails();
     std::cout << "[Radio] Controller radio OK - channel " << (int)RF_CHANNEL << "\n";
     return true;
 }
 
 bool RadioManager::sendControl(const ControlPacket& pkt, TelemetryPacket* telem) {
     const bool acked = radio_.write(&pkt, sizeof(pkt));
+    std::printf("Control packet sent: %s\n", acked ? "true" : "false");
 
     if (acked && telem && radio_.isAckPayloadAvailable()) {
         radio_.read(telem, sizeof(TelemetryPacket));

@@ -10,7 +10,7 @@ static void handleSignal(int) {
 }
 
 int main() {
-    setenv("QT_QPA_PLATFORM", "linuxfb", 0);  // allows OpenCV/Qt to run without X11
+    setenv("QT_QPA_PLATFORM", "xcb", 0);
 
     std::signal(SIGINT,  handleSignal);
     std::signal(SIGTERM, handleSignal);
