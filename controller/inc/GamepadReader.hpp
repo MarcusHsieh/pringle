@@ -10,13 +10,15 @@ struct GamepadState {
 
 class GamepadReader {
 public:
-    explicit GamepadReader(const std::string& device = "/dev/input/js0");
+    explicit GamepadReader(const std::string& device = "");
     ~GamepadReader();
 
     bool init();
     void update(GamepadState& state);
 
 private:
+    bool tryOpen();
+
     std::string device_;
     int         fd_ = -1;
 

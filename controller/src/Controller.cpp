@@ -39,6 +39,9 @@ void Controller::gamepadLoop() {
     GamepadState g{};
     while (running_) {
         gamepad_.update(g);
+        // Debug
+        std::printf("fwd:%.2f  turn:%.2f  servo:%.2f\n",
+            g.rightY, g.rightX, g.servoPos);
         const auto d = mixInputs(g);
         leftDuty_.store(d.left);
         rightDuty_.store(d.right);
@@ -65,7 +68,7 @@ void Controller::radioLoop() {
 
             if (radio_.sendControl(pkt, &telem)) {
                 dropCount = 0;
-                // Telemetry available:
+                // Debug
                 std::printf("TEMP:%3d°C  SEQ:%3d  FLAGS:%02x\n",
                             telem.cpuTemp, telem.seq, telem.flags);
             } else {
