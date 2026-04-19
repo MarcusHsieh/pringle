@@ -33,11 +33,9 @@ const int CAMERA_WIDTH =        640;
 const int CAMERA_HEIGHT =       480;
 
 // NRF module pins (BCM numbering)
-const int NRF_CE_PIN = 25;
 const int NRF_SCK_PIN = 11;
 const int NRF_MOSI_PIN = 10;
 const int NRF_MISO_PIN = 9;
-const int NRF_CSN_PIN = 8;
 
 
 #endif

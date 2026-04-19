@@ -29,7 +29,7 @@ bool RadioManager::sendControl(const ControlPacket& pkt, TelemetryPacket* telem)
     const bool acked = radio_.write(&pkt, sizeof(pkt));
 
     if (acked && telem && radio_.isAckPayloadAvailable()) {
-        radio_.read(telem, sizeof(TelemetryPacket));
+        uint8_t size = radio_.getDynamicPayloadSize();
         if (size > 0 && size <= 32) {
             radio_.read(telem, size);
         }

@@ -53,7 +53,7 @@ void motor_worker() {
         // use command variables to control motor speeds
         {
             std::lock_guard<std::mutex> lock(command_mutex);
-            std::cout << "Current IMU Readings - Gyro (Roll, Pitch, Yaw): (" << gyro_roll << ", " << gyro_pitch << ", " << gyro_yaw << ") deg/s" << std::endl;
+            // std::cout << "Current IMU Readings - Gyro (Roll, Pitch, Yaw): (" << gyro_roll << ", " << gyro_pitch << ", " << gyro_yaw << ") deg/s" << std::endl;
 
             right_command = right_command + correction;
             left_command = left_command - correction;
@@ -129,7 +129,7 @@ void listen_worker() {
     while(running) {
         // std::cout << "Listen Worker Running" << std::endl;
 
-        while (radio.receive(pkt)) {
+        if (radio.receive(pkt)) {
             std::lock_guard<std::mutex> lock(command_mutex);
             left_command = pkt.leftDuty;
             right_command = pkt.rightDuty;
@@ -138,7 +138,7 @@ void listen_worker() {
             radio.queueTelemetry(telem);
             std::cout << "Received Control Packet - Left: " << left_command << "%, Right: " << right_command << "%, Servo: " << servo_command << "%" << std::endl;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     return;
