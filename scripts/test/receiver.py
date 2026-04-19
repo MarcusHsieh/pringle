@@ -21,16 +21,16 @@ from pyrf24 import RF24, RF24_PA_MIN, RF24_250KBPS
 CE_PIN       = 25
 CSN_PIN      = 0
 CHANNEL      = 76
-PA_LEVEL     = RF24_PA_MIN    # switch to RF24_PA_HIGH after bench test passes
+PA_LEVEL     = RF24_PA_MIN
 DATA_RATE    = RF24_250KBPS
-PAYLOAD_SIZE = 32             # fixed, no dynamic payloads
-PIPE_ADDR    = b"1CTRL"       # 5-byte address — matches C++ CTRL_ADDR
+PAYLOAD_SIZE = 32
+PIPE_ADDR    = b"1CTRL"
 RETRY_DELAY  = 5
 RETRY_COUNT  = 15
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def decode_payload(raw: bytes) -> tuple[int, bool]:
+def decode_payload(raw: bytes) -> tuple:
     counter    = struct.unpack("<I", raw[:4])[0]
     padding_ok = all(b == 0xAA for b in raw[4:])
     return counter, padding_ok
@@ -51,33 +51,33 @@ def main():
 
     print("[RX] radio.begin() OK — SPI established")
 
-    radio.set_channel(CHANNEL)
+    radio.setChannel(CHANNEL)
     print(f"[RX] Channel: {CHANNEL} ({2400 + CHANNEL} MHz)")
 
-    radio.set_pa_level(PA_LEVEL)
+    radio.setPALevel(PA_LEVEL)
     print(f"[RX] PA level: {PA_LEVEL}  (0=MIN 1=LOW 2=HIGH 3=MAX)")
 
-    radio.set_data_rate(DATA_RATE)
+    radio.setDataRate(DATA_RATE)
     print("[RX] Data rate: RF24_250KBPS")
 
-    radio.set_auto_ack(True)          # ENABLED — receiver sends ACKs automatically
+    radio.setAutoAck(True)
     print("[RX] Auto-ack: ENABLED")
 
-    radio.dynamic_payloads = False
-    radio.payload_length = PAYLOAD_SIZE
+    radio.disableDynamicPayloads()
+    radio.setPayloadSize(PAYLOAD_SIZE)
     print(f"[RX] Fixed payload size: {PAYLOAD_SIZE} bytes")
 
-    radio.set_retries(RETRY_DELAY, RETRY_COUNT)
+    radio.setRetries(RETRY_DELAY, RETRY_COUNT)
 
-    # Open pipe 1 — NOT pipe 0. Pipe 0 is reserved internally for auto-ack TX address.
-    radio.open_reading_pipe(1, PIPE_ADDR)
+    # Pipe 1 — pipe 0 is reserved internally for auto-ack TX address
+    radio.openReadingPipe(1, PIPE_ADDR)
     print(f"[RX] Reading pipe 1: {PIPE_ADDR}")
 
-    radio.start_listening()           # PRX mode
+    radio.startListening()
     print("[RX] PRX (receive) mode active")
 
     print("\n===== REGISTER DUMP =====")
-    radio.print_details()
+    radio.printDetails()
     print("=========================\n")
 
     print("[RX] Listening... Ctrl+C to stop\n")
@@ -93,9 +93,7 @@ def main():
                 raw = radio.read(PAYLOAD_SIZE)
                 received_total += 1
 
-                # RPD latches on received signal power — read immediately after receive
-                rssi_ok = radio.rpd
-
+                rssi_ok = radio.testRPD()
                 counter, padding_ok = decode_payload(raw)
 
                 if last_counter is not None:
@@ -117,7 +115,6 @@ def main():
                     print(f"[RX]   raw: {raw.hex()}")
 
             else:
-                # Print status every 5s while waiting
                 if time.monotonic() - last_status_t > 5.0:
                     print(f"[RX] Waiting... (received {received_total} so far)")
                     last_status_t = time.monotonic()

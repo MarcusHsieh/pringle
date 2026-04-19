@@ -32,7 +32,7 @@ SEND_INTERVAL = 1.0           # seconds between transmissions
 
 
 def build_payload(counter: int) -> bytes:
-    packed = struct.pack("<I", counter)          # little-endian uint32
+    packed  = struct.pack("<I", counter)
     padding = bytes([0xAA] * (PAYLOAD_SIZE - len(packed)))
     return packed + padding
 
@@ -47,46 +47,45 @@ def main():
         print("       1. SPI enabled: sudo raspi-config -> Interfaces -> SPI")
         print("       2. Device exists: ls /dev/spidev0.0")
         print("       3. Wiring: MOSI=GPIO10 MISO=GPIO9 SCK=GPIO11 CSN=GPIO8 CE=GPIO25")
-        print("       4. VCC: NRF24+PA draws ~150mA — RPi 3.3V pin is rated 50mA.")
-        print("          Use a dedicated 3.3V regulator + 10uF and 100nF caps on VCC-GND.")
+        print("       4. VCC: NRF24+PA draws ~150mA — use dedicated 3.3V reg + decoupling caps.")
         sys.exit(1)
 
     print("[TX] radio.begin() OK — SPI established")
 
-    radio.set_channel(CHANNEL)
+    radio.setChannel(CHANNEL)
     print(f"[TX] Channel: {CHANNEL} ({2400 + CHANNEL} MHz)")
 
-    radio.set_pa_level(PA_LEVEL)
+    radio.setPALevel(PA_LEVEL)
     print(f"[TX] PA level: {PA_LEVEL}  (0=MIN 1=LOW 2=HIGH 3=MAX)")
 
-    radio.set_data_rate(DATA_RATE)
+    radio.setDataRate(DATA_RATE)
     print("[TX] Data rate: RF24_250KBPS")
 
-    radio.set_auto_ack(True)          # ENABLED — this is the key fix
+    radio.setAutoAck(True)
     print("[TX] Auto-ack: ENABLED")
 
-    radio.dynamic_payloads = False    # fixed payload, no complexity
-    radio.payload_length = PAYLOAD_SIZE
+    radio.disableDynamicPayloads()
+    radio.setPayloadSize(PAYLOAD_SIZE)
     print(f"[TX] Fixed payload size: {PAYLOAD_SIZE} bytes")
 
-    radio.set_retries(RETRY_DELAY, RETRY_COUNT)
+    radio.setRetries(RETRY_DELAY, RETRY_COUNT)
     print(f"[TX] Retries: delay={RETRY_DELAY}x250us, count={RETRY_COUNT}")
 
-    radio.open_writing_pipe(PIPE_ADDR)
+    radio.openWritingPipe(PIPE_ADDR)
     print(f"[TX] Writing pipe: {PIPE_ADDR}")
 
-    radio.stop_listening()            # PTX mode
+    radio.stopListening()
     print("[TX] PTX (transmit) mode active")
 
     print("\n===== REGISTER DUMP =====")
-    radio.print_details()
+    radio.printDetails()
     print("=========================\n")
 
-    # Noise check — briefly enter RX to sample RPD
-    radio.start_listening()
+    # Noise check
+    radio.startListening()
     time.sleep(0.001)
-    noise = radio.rpd
-    radio.stop_listening()
+    noise = radio.testRPD()
+    radio.stopListening()
     if noise:
         print(f"[TX] WARNING: high RF noise on channel {CHANNEL} (RPD=True).")
         print("     Try: sudo nmcli radio wifi off   or move module away from RPi.")
@@ -95,9 +94,9 @@ def main():
 
     print(f"\n[TX] Sending every {SEND_INTERVAL}s — Ctrl+C to stop\n")
 
-    counter     = 0
-    sent_total  = 0
-    ack_total   = 0
+    counter    = 0
+    sent_total = 0
+    ack_total  = 0
 
     try:
         while True:
@@ -110,7 +109,7 @@ def main():
             if acked:
                 ack_total += 1
 
-            arc  = radio.arc_counts
+            arc  = radio.getARC()
             rate = ack_total / sent_total * 100
 
             if acked:
