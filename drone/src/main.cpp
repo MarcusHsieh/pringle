@@ -13,14 +13,15 @@ int main() {
     
     // create threads
     std::thread motor_thread(motor_worker);
-    // std::thread camera_thread(camera_worker);
+    std::thread camera_thread(camera_worker);
     std::thread listen_thread(listen_worker);
 
     // join threads
     motor_thread.join();
-    // camera_thread.join();
+    camera_thread.join();
     listen_thread.join();
 
     lgGpiochipClose(h);
+    running = false;
     return 0;
 }
