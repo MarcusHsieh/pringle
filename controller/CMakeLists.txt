@@ -21,7 +21,7 @@ add_executable(pringle_controller
 )
 
 target_include_directories(pringle_controller PRIVATE
-    include
+    inc
     ${CMAKE_SOURCE_DIR}/..
     ${OpenCV_INCLUDE_DIRS}
 )
