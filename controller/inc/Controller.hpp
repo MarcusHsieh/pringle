@@ -44,6 +44,7 @@ private:
     std::atomic<float> servoDuty_{7.5f};
 
     std::atomic<bool> running_{false};
+    bool videoOk_{false};
 
     static constexpr int   CONTROL_HZ   = 40;
     static constexpr float THROTTLE_CAP = 0.65f;   // fraction of 2.5% range -> 7.5 + 0.65*2.5 = 9.125 max duty

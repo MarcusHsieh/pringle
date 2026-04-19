@@ -12,7 +12,8 @@ Controller::Controller() = default;
 bool Controller::init() {
     if (!radio_.init())   { std::cerr << "[Controller] Radio init failed\n";   return false; }
     if (!gamepad_.init()) { std::cerr << "[Controller] Gamepad init failed\n"; return false; }
-    if (!video_.init())   { std::cerr << "[Controller] Video init failed\n";   return false; }
+    videoOk_ = video_.init();
+    if (!videoOk_) std::cerr << "[Controller] Video unavailable - running without display\n";
     running_ = true;
     std::cout << "[Controller] Ready - sending at " << CONTROL_HZ << " Hz\n";
     return true;
@@ -38,6 +39,9 @@ void Controller::gamepadLoop() {
     GamepadState g{};
     while (running_) {
         gamepad_.update(g);
+        // Debug
+        std::printf("fwd:%.2f  turn:%.2f  servo:%.2f\n",
+            g.rightY, g.rightX, g.servoPos);
         const auto d = mixInputs(g);
         leftDuty_.store(d.left);
         rightDuty_.store(d.right);
@@ -64,7 +68,7 @@ void Controller::radioLoop() {
 
             if (radio_.sendControl(pkt, &telem)) {
                 dropCount = 0;
-                // Telemetry available:
+                // Debug
                 std::printf("TEMP:%3d°C  SEQ:%3d  FLAGS:%02x\n",
                             telem.cpuTemp, telem.seq, telem.flags);
             } else {
@@ -81,7 +85,8 @@ void Controller::radioLoop() {
 // videoLoop
 void Controller::videoLoop() {
     while (running_) {
-        video_.update();   // grab + imshow + waitKey(1) - on main thread
+        if (videoOk_) video_.update();
+        else std::this_thread::sleep_for(100ms);
     }
 }
 

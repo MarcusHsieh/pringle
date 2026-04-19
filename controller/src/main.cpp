@@ -1,6 +1,7 @@
 #include "Controller.hpp"
 #include <iostream>
 #include <csignal>
+#include <cstdlib>
 
 static Controller* gController = nullptr;
 
@@ -9,6 +10,8 @@ static void handleSignal(int) {
 }
 
 int main() {
+    setenv("QT_QPA_PLATFORM", "linuxfb", 0);  // allows OpenCV/Qt to run without X11
+
     std::signal(SIGINT,  handleSignal);
     std::signal(SIGTERM, handleSignal);
 
@@ -16,7 +19,7 @@ int main() {
     gController = &ctrl;
 
     if (!ctrl.init()) {
-        std::cerr << "Controller init failed\n";
+        std::cerr << " >> Controller init failed << \n";
         return 1;
     }
 
