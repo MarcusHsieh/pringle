@@ -123,20 +123,19 @@ void listen_worker() {
         std::cout << "[Listen Worker] Radio initialized successfully." << std::endl;
     }
 
-    while(running) {
-        std::cout << "Listen Worker Running." << std::endl;
-        radio.receive(pkt);
-        radio.queueTelemetry(telem);
+    radio.queueTelemetry(telem);  // pre-load ACK payload before first packet arrives
 
-        // digest packet into variables for control
-        {
+    while(running) {
+        if (radio.receive(pkt)) {
             std::lock_guard<std::mutex> lock(command_mutex);
             left_command = pkt.leftDuty;
             right_command = pkt.rightDuty;
             servo_command = pkt.servoDuty;
-            std::cout << "Received Control Packet - Left Duty: " << left_command << "%, Right Duty: " << right_command << "%, Servo Duty: " << servo_command << "%" << std::endl;
+            telem.seq++;
+            radio.queueTelemetry(telem);
+            std::cout << "Received Control Packet - Left: " << left_command << "%, Right: " << right_command << "%, Servo: " << servo_command << "%" << std::endl;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
     return;
