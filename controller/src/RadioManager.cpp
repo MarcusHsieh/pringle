@@ -21,12 +21,14 @@ bool RadioManager::init() {
 
     radio_.stopListening();               // PTX mode
 
+    radio_.printDetails();
     std::cout << "[Radio] Controller radio OK - channel " << (int)RF_CHANNEL << "\n";
     return true;
 }
 
 bool RadioManager::sendControl(const ControlPacket& pkt, TelemetryPacket* telem) {
     const bool acked = radio_.write(&pkt, sizeof(pkt));
+    std::printf("Control packet sent: %s\n", acked ? "true" : "false");
 
     if (acked && telem && radio_.isAckPayloadAvailable()) {
         uint8_t size = radio_.getDynamicPayloadSize();

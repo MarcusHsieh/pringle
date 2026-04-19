@@ -25,6 +25,7 @@ bool RadioManager::init() {
     radio_.startListening();                    // PRX mode
     radio_.ce(true);
 
+    radio_.printDetails();
     std::cout << "[Radio] Drone radio OK - listening on channel " << (int)RF_CHANNEL << "\n";
     radio_.printPrettyDetails();
     return true;
