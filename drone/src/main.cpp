@@ -1,27 +1,25 @@
-#include "main.hpp"
-#include "workers.hpp"
+#include "DroneApp.hpp"
+#include <iostream>
+#include <csignal>
 
-// gpio controller chip handle
-int h;
-bool running = true;
+static DroneApp* gApp = nullptr;
+
+static void handleSignal(int) {
+    if (gApp) gApp->stop();
+}
 
 int main() {
-    // initialize gpio
-    h = lgGpiochipOpen(0);
+    std::signal(SIGINT,  handleSignal);
+    std::signal(SIGTERM, handleSignal);
 
-    std::cout << "Booting up Threads" << std::endl;
-    
-    // create threads
-    std::thread motor_thread(motor_worker);
-    std::thread camera_thread(camera_worker);
-    std::thread listen_thread(listen_worker);
+    DroneApp app;
+    gApp = &app;
 
-    // join threads
-    motor_thread.join();
-    camera_thread.join();
-    listen_thread.join();
+    if (!app.init()) {
+        std::cerr << "Drone init failed — motors will not run\n";
+        return 1;
+    }
 
-    lgGpiochipClose(h);
-    running = false;
+    app.run();   // blocks until stop() is called or Ctrl+C
     return 0;
 }

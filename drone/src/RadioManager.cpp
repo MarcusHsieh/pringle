@@ -5,12 +5,12 @@ RadioManager::RadioManager() : radio_(CE_PIN, CSN_PIN) {}
 
 bool RadioManager::init() {
     if (!radio_.begin()) {
-        std::cerr << "[Radio] Hardware not responding\n";
+        std::cerr << "[Radio] Hardware not responding — check SPI wiring and 3.3V power\n";
         return false;
     }
 
     radio_.setChannel(RF_CHANNEL);
-    radio_.setPALevel(RF24_PA_LOW);
+    radio_.setPALevel(RF24_PA_HIGH);
     radio_.setDataRate(RF24_250KBPS);
     radio_.setRetries(5, 15);
     radio_.enableAckPayload();                  // allows writeAckPayload()
@@ -18,8 +18,7 @@ bool RadioManager::init() {
     radio_.openReadingPipe(1, CTRL_ADDR);       // pipe 1 = where control packets arrive
     radio_.startListening();                    // PRX mode
 
-    radio_.printDetails();
-    std::cout << "[Radio] Drone radio OK - listening on channel " << (int)RF_CHANNEL << "\n";
+    std::cout << "[Radio] Drone radio OK — listening on channel " << (int)RF_CHANNEL << "\n";
     return true;
 }
 
@@ -30,6 +29,6 @@ bool RadioManager::receive(ControlPacket& pkt) {
 }
 
 void RadioManager::queueTelemetry(const TelemetryPacket& telem) {
-    // Pipe 1 == reading pipe opened in init()
+    // Pipe 1 must match the reading pipe opened in init()
     radio_.writeAckPayload(1, &telem, sizeof(telem));
 }

@@ -8,17 +8,22 @@ struct GamepadState {
     float servoPos;   // d-pad vertical:         -1.0 = up, 0.0 = center, +1.0 = down
 };
 
+// Axis mapping (Xbox-compatible defaults):
+//   Axis 3 — right stick horizontal  (steering)
+//   Axis 4 — right stick vertical    (drive forward/backward)
+//   Axis 7 — d-pad vertical          (camera gimbal, discrete: -1 / 0 / +1)
+//
+// Verify with: jstest /dev/input/js0
+// Adjust AXIS_* constants below if your gamepad differs.
 class GamepadReader {
 public:
-    explicit GamepadReader(const std::string& device = "");
+    explicit GamepadReader(const std::string& device = "/dev/input/js0");
     ~GamepadReader();
 
     bool init();
     void update(GamepadState& state);
 
 private:
-    bool tryOpen();
-
     std::string device_;
     int         fd_ = -1;
 

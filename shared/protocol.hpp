@@ -1,30 +1,27 @@
 #pragma once
 #include <cstdint>
 
-// RF24 settings
-// Controller -> PTX (Primary Transmitter)
-// Drone -> PRX (Primary Receiver)
-// Basically, whenever controller sends packet, drone acks it back w/ its own packet
-constexpr uint8_t RF_CHANNEL        = 76;
-constexpr uint8_t CTRL_ADDR[6]      = "1CTRL";   // controller to drone
+// ── RF config ────────────────────────────────────────────────────────────────
+constexpr uint8_t RF_CHANNEL   = 76;
+constexpr uint8_t CTRL_ADDR[6] = "1CTRL";
 
-// Control packet (12 bytes)
-// Pulse widths in duty cycle percent @ 50hz -> motor + servo
-//    5.0 = full reverse (1.0ms pulse)
-//    7.5 = stop/neutral (1.5ms pulse)
-//   10.0 = full forward (2.0ms pulse)
+// ── Controller → Drone ──────────────────────────────────────────────────────
+// All motor/servo values are duty cycle percent at 50 Hz.
+//   5.0 = full reverse   (1.0 ms pulse)
+//   7.5 = neutral / stop (1.5 ms pulse)  ← ESC arming point
+//  10.0 = full forward   (2.0 ms pulse)
 struct ControlPacket {
-    float leftDuty;    // left motor 
-    float rightDuty;   // right motor
-    float servoDuty;   // camera gimbal pitch
-};
+    float leftDuty;   // 5.0 – 10.0
+    float rightDuty;
+    float servoDuty;
+};  // 12 bytes — well within the 32-byte nRF24L01 payload limit
 
-// Telemetry packet (3 bytes)
+// ── Drone → Controller (ACK payload) ────────────────────────────────────────
 struct TelemetryPacket {
-    uint8_t seq;            // rolling counter (0-255) for packet loss detection, ensures link is alive
-    uint8_t cpuTemp;        // drone CPU temperature in Celsius
-    uint8_t flags;          // bitmask
-};
+    uint8_t seq;      // rolling 0–255: proves link alive, detects drops
+    uint8_t cpuTemp;  // °C from /sys/class/thermal/thermal_zone0/temp
+    uint8_t flags;    // bitmask — see Flags::
+};  // 3 bytes
 
 namespace Flags {
     constexpr uint8_t MOTORS_ARMED = 1u << 0;

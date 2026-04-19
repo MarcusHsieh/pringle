@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# setup_controller.sh — run once on the controller RPi
 set -euo pipefail
 
 echo "=== Controller RPi Setup ==="
@@ -10,8 +11,9 @@ sudo apt install -y \
     liblgpio-dev \
     libopencv-dev \
     libv4l-dev \
-    joystick
+    joystick          # provides jstest for verifying gamepad axis mapping
 
+# ── Build and install RF24 with LGPIO driver ────────────────────────────────
 WORKDIR="$HOME/rf24_build"
 mkdir -p "$WORKDIR"
 cd "$WORKDIR"
@@ -30,7 +32,13 @@ sudo ldconfig
 echo ""
 echo "=== Setup complete ==="
 echo ""
+echo "To verify your gamepad axis mapping before running:"
+echo "  jstest /dev/input/js0"
+echo "  (check which axis numbers move when you push each stick)"
+echo "  Update AXIS_* constants in controller/include/GamepadReader.hpp if needed."
+echo ""
 echo "To build:"
 echo "  cd controller && mkdir -p build && cd build && cmake .. && make -j\$(nproc)"
-echo "To run:"
-echo "  sudo ./pringle_controller"
+echo ""
+echo "To run (must be root for GPIO access):"
+echo "  sudo ./r6_controller"

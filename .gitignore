@@ -1,1 +1,22 @@
+# Build dirs
 build/
+controller/build/
+drone/build/
+
+# Compiled binaries
+r6_controller
+r6_drone
+
+# Object/archive files
+*.o
+*.a
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

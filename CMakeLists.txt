@@ -1,12 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(pringle)
 
-# Running controller/ and drone/ independently on their respective RPis
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-
-# Drone CMake
-
-find_package(OpenCV REQUIRED)
-add_subdirectory(drone)
+# Each sub-project is built independently on its own RPi.
+# Uncomment both lines only if cross-compiling or using an IDE that wants the full tree.
+# add_subdirectory(controller)
+# add_subdirectory(drone)
