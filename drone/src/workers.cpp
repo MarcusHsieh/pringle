@@ -1,7 +1,7 @@
 #include "workers.hpp"
 
 std::mutex command_mutex; // ensures thread safe access to command variables
-MPU6050 imu = MPU6050(0x68, true); // I2C address, bool run update thread
+MPU6050 imu = MPU6050(0x68, false); // I2C address, bool run update thread
 
 // variables for motor commands
 float left_command = 7.5f;
@@ -39,15 +39,15 @@ void motor_worker() {
     }
 
     while(running) {
-        imu.getAccel(&accel_x, &accel_y, &accel_z);
-        imu.getGyro(&gyro_roll, &gyro_pitch, &gyro_yaw);
+        // imu.getAccel(&accel_x, &accel_y, &accel_z);
+        // imu.getGyro(&gyro_roll, &gyro_pitch, &gyro_yaw);
 
-        if (std::abs(gyro_pitch) > 10.0f) {
-            correction = pid.calculate(0.0f, gyro_pitch, dt);
-        }
-        else {
-            pid.integral = 0.0f;
-        }
+        // if (std::abs(gyro_pitch) > 10.0f) {
+        //     correction = pid.calculate(0.0f, gyro_pitch, dt);
+        // }
+        // else {
+        //     pid.integral = 0.0f;
+        // }
         
         // use command variables to control motor speeds
         {

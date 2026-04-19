@@ -10,7 +10,7 @@ bool RadioManager::init() {
     }
 
     radio_.setChannel(RF_CHANNEL);
-    radio_.setPALevel(RF24_PA_HIGH);
+    radio_.setPALevel(RF24_PA_MIN);
     radio_.setDataRate(RF24_250KBPS);
     radio_.setRetries(5, 15);
     radio_.enableAckPayload();                  // allows writeAckPayload()
