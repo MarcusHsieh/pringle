@@ -39,15 +39,16 @@ void motor_worker() {
     }
 
     while(running) {
-        // imu.getAccel(&accel_x, &accel_y, &accel_z);
-        // imu.getGyro(&gyro_roll, &gyro_pitch, &gyro_yaw);
+        // std::cout << "Motor Worker Running" << std::endl;
+        imu.getAccel(&accel_x, &accel_y, &accel_z);
+        imu.getGyro(&gyro_roll, &gyro_pitch, &gyro_yaw);
 
-        // if (std::abs(gyro_pitch) > 10.0f) {
-        //     correction = pid.calculate(0.0f, gyro_pitch, dt);
-        // }
-        // else {
-        //     pid.integral = 0.0f;
-        // }
+        if (std::abs(gyro_pitch) > 10.0f) {
+            correction = pid.calculate(0.0f, gyro_pitch, dt);
+        }
+        else {
+            pid.integral = 0.0f;
+        }
         
         // use command variables to control motor speeds
         {
@@ -92,7 +93,7 @@ void camera_worker() {
     std::cout << "[Camera] SUCCESS: Streaming to 3.5mm Radio Jack..." << std::endl;
 
     while (running) {
-        std::cout << "Camera Worker Running" << std::endl;
+        // std::cout << "Camera Worker Running" << std::endl;
         cap >> frame;
         if (frame.empty()) continue;
 
@@ -126,7 +127,9 @@ void listen_worker() {
     radio.queueTelemetry(telem);  // pre-load ACK payload before first packet arrives
 
     while(running) {
-        if (radio.receive(pkt)) {
+        // std::cout << "Listen Worker Running" << std::endl;
+
+        while (radio.receive(pkt)) {
             std::lock_guard<std::mutex> lock(command_mutex);
             left_command = pkt.leftDuty;
             right_command = pkt.rightDuty;
@@ -135,7 +138,7 @@ void listen_worker() {
             radio.queueTelemetry(telem);
             std::cout << "Received Control Packet - Left: " << left_command << "%, Right: " << right_command << "%, Servo: " << servo_command << "%" << std::endl;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
     }
 
     return;

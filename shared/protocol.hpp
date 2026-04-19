@@ -13,14 +13,14 @@ constexpr uint8_t CTRL_ADDR[6]      = "1CTRL";   // controller to drone
 //    5.0 = full reverse (1.0ms pulse)
 //    7.5 = stop/neutral (1.5ms pulse)
 //   10.0 = full forward (2.0ms pulse)
-struct ControlPacket {
+struct __attribute__((packed)) ControlPacket {
     float leftDuty;    // left motor 
     float rightDuty;   // right motor
     float servoDuty;   // camera gimbal pitch
 };
 
 // Telemetry packet (3 bytes)
-struct TelemetryPacket {
+struct __attribute__((packed)) TelemetryPacket {
     uint8_t seq;            // rolling counter (0-255) for packet loss detection, ensures link is alive
     uint8_t cpuTemp;        // drone CPU temperature in Celsius
     uint8_t flags;          // bitmask

@@ -10,21 +10,37 @@ bool RadioManager::init() {
     }
 
     radio_.setChannel(RF_CHANNEL);
-    radio_.setPALevel(RF24_PA_MIN);
+    radio_.setPALevel(RF24_PA_LOW);
     radio_.setDataRate(RF24_250KBPS);
-    radio_.setRetries(5, 15);
-    radio_.enableAckPayload();                  // allows writeAckPayload()
-    radio_.setPayloadSize(sizeof(ControlPacket));
+
+    radio_.enableDynamicPayloads();
+    radio_.enableAckPayload();
+
     radio_.openReadingPipe(1, CTRL_ADDR);       // pipe 1 = where control packets arrive
+
+    radio_.flush_rx();
+    radio_.flush_tx();
+
     radio_.startListening();                    // PRX mode
 
     std::cout << "[Radio] Drone radio OK - listening on channel " << (int)RF_CHANNEL << "\n";
+    radio_.printDetails();
     return true;
 }
 
 bool RadioManager::receive(ControlPacket& pkt) {
-    if (!radio_.available()) return false;
-    radio_.read(&pkt, sizeof(pkt));
+    if (!radio_.available()) {
+        std::cout << "[Radio] No packet available\n";
+        return false;
+    }
+    uint8_t size = radio_.getDynamicPayloadSize();
+    if (size > 32) {
+        std::cout << "[Radio] Invalid packet size: " << (int)size << "\n";
+        radio_.flush_rx();
+        return false;
+    }
+    radio_.read(&pkt, size);
+    std::cout << "[Radio] Received packet" << "\n";
     return true;
 }
 

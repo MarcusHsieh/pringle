@@ -29,8 +29,8 @@ const int MOTOR_PIN_LEFT =      20;
 const int SERVO_PIN =           21;
 
 // camera configuration
-const int CAMERA_WIDTH =        1280; 
-const int CAMERA_HEIGHT =       720;
+const int CAMERA_WIDTH =        640; 
+const int CAMERA_HEIGHT =       480;
 
 // NRF module pins (BCM numbering)
 const int NRF_CE_PIN = 25;
