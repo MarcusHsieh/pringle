@@ -1,30 +1,34 @@
 cmake_minimum_required(VERSION 3.16)
-project(r6_drone LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(RF24 REQUIRED)
+project(pringle_drone)
+
+set(BINARY_NAME pringle_drone)
+
+include_directories(inc)
+
 find_package(OpenCV REQUIRED)
 
-add_executable(r6_drone
+add_executable(${BINARY_NAME}
     src/main.cpp
-    # src/DroneApp.cpp
-    # src/RadioManager.cpp
-    # src/MotorController.cpp
-    # src/ServoController.cpp
-    # src/CameraCapture.cpp
+    src/workers.cpp
+    src/GamepadReader.cpp
+    src/MPU6050.cpp
 )
 
-target_include_directories(r6_drone PRIVATE
-    include
-    ${CMAKE_SOURCE_DIR}/..
+target_include_directories(${BINARY_NAME} PRIVATE
+    inc
     ${OpenCV_INCLUDE_DIRS}
 )
 
-target_link_libraries(r6_drone PRIVATE
-    RF24
+target_link_libraries(${BINARY_NAME} PRIVATE
     lgpio
-    ${OpenCV_LIBS}
     pthread
+    m
+    i2c
+    ${OpenCV_LIBS}
 )
+
+set_target_properties(${BINARY_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")

@@ -22,7 +22,7 @@ fi
 
 cd RF24
 mkdir -p build && cd build
-cmake .. -D RF24_DRIVER=LGPIO
+cmake .. -D RF24_DRIVER=SPIDEV
 make -j"$(nproc)"
 sudo make install
 sudo ldconfig
@@ -32,3 +32,5 @@ echo "=== Setup complete ==="
 echo ""
 echo "To build:"
 echo "  cd controller && mkdir -p build && cd build && cmake .. && make -j\$(nproc)"
+echo "To run:"
+echo "  sudo ./pringle_controller"

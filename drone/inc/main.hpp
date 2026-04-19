@@ -1,32 +1,25 @@
 #ifndef MAIN_HPP
 #define MAIN_HPP
 
-// basic headers
 #include <iostream>
 #include <vector>
 #include <string>
-
-// gpio control
-#include <lgpio.h> 
-
-// threading
+#include <lgpio.h>
 #include <thread>
 #include <mutex>
 #include <chrono>
 #include <atomic>
 
-// gpio control handle
 extern int h;
-
-// running control flag
 extern bool running;
 
-// gpio config
-namespace Config {
-    constexpr int MOTOR_PIN_A =     18;
-    constexpr int MOTOR_PIN_B =     33;
-    constexpr int CAMERA_WIDTH =    1280;
-    constexpr int CAMERA_HEIGHT =   720;
-}
+// Motor / servo pins (BCM numbering)
+const int MOTOR_PIN_RIGHT = 26;
+const int MOTOR_PIN_LEFT  = 20;
+const int SERVO_PIN       = 21;
+
+// Camera resolution
+const int CAMERA_WIDTH  = 640;
+const int CAMERA_HEIGHT = 480;
 
 #endif
