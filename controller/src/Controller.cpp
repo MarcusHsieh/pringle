@@ -12,7 +12,8 @@ Controller::Controller() = default;
 bool Controller::init() {
     if (!radio_.init())   { std::cerr << "[Controller] Radio init failed\n";   return false; }
     if (!gamepad_.init()) { std::cerr << "[Controller] Gamepad init failed\n"; return false; }
-    if (!video_.init())   { std::cerr << "[Controller] Video init failed\n";   return false; }
+    videoOk_ = video_.init();
+    if (!videoOk_) std::cerr << "[Controller] Video unavailable - running without display\n";
     running_ = true;
     std::cout << "[Controller] Ready - sending at " << CONTROL_HZ << " Hz\n";
     return true;
@@ -81,7 +82,8 @@ void Controller::radioLoop() {
 // videoLoop
 void Controller::videoLoop() {
     while (running_) {
-        video_.update();   // grab + imshow + waitKey(1) - on main thread
+        if (videoOk_) video_.update();
+        else std::this_thread::sleep_for(100ms);
     }
 }
 
